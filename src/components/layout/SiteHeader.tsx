@@ -1,20 +1,24 @@
 import { Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { Search, User, UserPlus, LayoutGrid, ChevronDown, Menu } from "lucide-react";
+import { Search, User, UserPlus, LayoutGrid, ChevronDown, Menu, LogOut, LayoutDashboard, Wallet } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { categories, navLinks } from "@/data/site";
+import { useAuth } from "@/lib/auth";
 
 export function SiteHeader() {
   const [searchQuery, setSearchQuery] = useState("");
   const [isOpen, setIsOpen] = useState(false);
+  const { user, loading, signOut, isAdmin } = useAuth();
 
   return (
     <header className="sticky top-0 z-50 w-full bg-white/95 backdrop-blur border-b border-border">
@@ -48,23 +52,69 @@ export function SiteHeader() {
             </div>
 
             <div className="flex items-center gap-2 sm:gap-3">
-              <Link
-                to="/contact"
-                className="hidden sm:inline-flex items-center gap-2 text-brand-navy hover:text-brand-orange transition-colors font-medium text-sm"
-              >
-                <User className="w-4 h-4" />
-                Login
-              </Link>
-              <Button
-                asChild
-                className="bg-brand-orange hover:bg-brand-orange-hover text-white shadow-sm"
-              >
-                <Link to="/contact" className="flex items-center gap-2">
-                  <UserPlus className="w-4 h-4" />
-                  <span className="hidden xs:inline">Register</span>
-                  <span className="xs:hidden">Join</span>
-                </Link>
-              </Button>
+              {loading ? (
+                <div className="h-9 w-24 rounded-md bg-muted animate-pulse" />
+              ) : user ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" className="gap-2 border-brand-navy/20">
+                      <User className="w-4 h-4" />
+                      <span className="hidden sm:inline max-w-[120px] truncate">
+                        {user.email}
+                      </span>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56">
+                    <DropdownMenuLabel className="truncate">{user.email}</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem asChild>
+                      <a href="/dashboard" className="cursor-pointer flex items-center">
+                        <LayoutDashboard className="w-4 h-4 mr-2" /> Dashboard
+                      </a>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <a href="/wallet" className="cursor-pointer flex items-center">
+                        <Wallet className="w-4 h-4 mr-2" /> Wallet
+                      </a>
+                    </DropdownMenuItem>
+                    {isAdmin && (
+                      <DropdownMenuItem asChild>
+                        <a href="/admin" className="cursor-pointer flex items-center">
+                          <LayoutGrid className="w-4 h-4 mr-2" /> Admin
+                        </a>
+                      </DropdownMenuItem>
+                    )}
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      onClick={() => signOut()}
+                      className="cursor-pointer text-destructive focus:text-destructive"
+                    >
+                      <LogOut className="w-4 h-4 mr-2" /> Sign out
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : (
+                <>
+                  <Link
+                    to="/auth"
+                    search={{ mode: "login" }}
+                    className="hidden sm:inline-flex items-center gap-2 text-brand-navy hover:text-brand-orange transition-colors font-medium text-sm"
+                  >
+                    <User className="w-4 h-4" />
+                    Login
+                  </Link>
+                  <Button
+                    asChild
+                    className="bg-brand-orange hover:bg-brand-orange-hover text-white shadow-sm"
+                  >
+                    <Link to="/auth" search={{ mode: "signup" }} className="flex items-center gap-2">
+                      <UserPlus className="w-4 h-4" />
+                      <span className="hidden xs:inline">Register</span>
+                      <span className="xs:hidden">Join</span>
+                    </Link>
+                  </Button>
+                </>
+              )}
             </div>
           </div>
         </div>
