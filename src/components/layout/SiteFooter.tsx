@@ -1,15 +1,29 @@
 import { Link } from "@tanstack/react-router";
-import { Facebook, Twitter, Linkedin, Instagram, MapPin, Mail, Phone, MessageCircle, Send, Users } from "lucide-react";
+import { Facebook, MapPin, Mail, Phone, MessageCircle, Send, Users } from "lucide-react";
 import { contactInfo } from "@/data/site";
+
+function TikTokIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+      <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1V9.01a6.32 6.32 0 0 0-.79-.05 6.34 6.34 0 0 0-6.34 6.34 6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.33-6.34V8.73a8.28 8.28 0 0 0 4.84 1.55V6.82a4.85 4.85 0 0 1-1.07-.13z"/>
+    </svg>
+  );
+}
 
 export function SiteFooter() {
   const year = new Date().getFullYear();
 
   const socials = [
-    { icon: Facebook, href: "https://facebook.com", label: "Facebook" },
-    { icon: Twitter, href: "https://twitter.com", label: "Twitter" },
-    { icon: Linkedin, href: "https://linkedin.com", label: "LinkedIn" },
-    { icon: Instagram, href: "https://instagram.com", label: "Instagram" },
+    {
+      icon: Facebook,
+      href: "https://www.facebook.com/profile.php?id=61590741410137",
+      label: "Facebook",
+    },
+    {
+      icon: TikTokIcon,
+      href: "https://www.tiktok.com/@o.n.l.y.s.a.m.m.y?_r=1&_t=ZS-96sJydYpfHh",
+      label: "TikTok",
+    },
   ];
 
   const community = [
