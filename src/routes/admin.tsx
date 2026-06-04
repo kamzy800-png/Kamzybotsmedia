@@ -461,8 +461,8 @@ function ProductsTab() {
                 <textarea value={form.description ?? ""} onChange={(e) => setForm({ ...form, description: e.target.value })} className="mt-1 w-full rounded-md border border-input px-3 py-2 text-sm resize-none h-20 focus:outline-none focus:ring-2 focus:ring-brand-orange/30" placeholder="Optional description…" />
               </div>
               <div className="col-span-2">
-                <Label>Image URL</Label>
-                <Input value={form.image_url ?? ""} onChange={(e) => setForm({ ...form, image_url: e.target.value })} className="mt-1" placeholder="https://…" />
+                <Label>Product Image</Label>
+                <ImageUploader value={form.image_url ?? null} onChange={(url) => setForm({ ...form, image_url: url ?? "" })} />
               </div>
               <div className="col-span-2 flex items-center gap-3">
                 <input type="checkbox" id="published" checked={form.published} onChange={(e) => setForm({ ...form, published: e.target.checked })} className="w-4 h-4 accent-orange-500" />
