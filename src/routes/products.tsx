@@ -1,7 +1,7 @@
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowRight, Facebook, Instagram, Twitter, Youtube, Wrench, Loader2, ShoppingCart, X, Copy, CheckCheck, PackageCheck, AlertCircle } from "lucide-react";
+import { ArrowRight, Facebook, Instagram, Twitter, Youtube, Wrench, Loader2, ShoppingCart, X, Copy, CheckCheck, PackageCheck, AlertCircle, CreditCard } from "lucide-react";
 import { toast } from "sonner";
 import { PageHero } from "@/components/sections/PageHero";
 import { categories as staticCategories } from "@/data/site";
@@ -12,6 +12,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { assignCredentialToOrder } from "@/lib/api/delivery";
+import { PaystackTopUpDialog } from "@/components/wallet/PaystackTopUpDialog";
 
 type DbCategory = { id: string; name: string; slug: string; description: string | null };
 type Product = { id: string; title: string; price: number; stock: number; description: string | null; image_url: string | null; slug: string; currency: string };
@@ -35,6 +36,9 @@ export default function ProductsPage() {
   const [deliveredCred, setDeliveredCred] = useState<DeliveredCred | null>(null);
   const [purchaseOrderId, setPurchaseOrderId] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [topUpOpen, setTopUpOpen] = useState(false);
+  const [topUpAmount, setTopUpAmount] = useState<number | undefined>(undefined);
+
 
   const activeCat = searchParams.get("cat") ?? undefined;
   const activeCategory = dbCategories.find((c) => c.slug === activeCat);
@@ -186,9 +190,16 @@ export default function ProductsPage() {
                       {productsLoading ? "Loading…" : `${products.length} product${products.length !== 1 ? "s" : ""} available`}
                     </p>
                   </div>
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3 flex-wrap">
                     {user && walletBalance !== null && (
                       <span className="text-sm text-muted-foreground">Wallet: <span className="font-medium text-brand-navy">₦{walletBalance.toLocaleString()}</span></span>
+                    )}
+                    {user && (
+                      <Button size="sm" variant="outline"
+                        onClick={() => { setTopUpAmount(undefined); setTopUpOpen(true); }}
+                        className="h-8 border-brand-orange text-brand-orange hover:bg-brand-orange hover:text-white text-xs">
+                        <CreditCard className="w-3.5 h-3.5 mr-1" />Top Up
+                      </Button>
                     )}
                     <button onClick={() => setCat(undefined)} className="flex items-center gap-1 text-sm text-muted-foreground hover:text-brand-navy transition-colors">
                       <X className="w-4 h-4" />Close
@@ -277,9 +288,18 @@ export default function ProductsPage() {
                 <span className="font-medium text-brand-navy">₦{Math.max(0, (walletBalance ?? 0) - buyTarget.price).toLocaleString()}</span>
               </div>
               {(walletBalance ?? 0) < buyTarget.price && (
-                <div className="bg-red-50 text-red-600 text-sm p-3 rounded-lg">
-                  Insufficient balance.{" "}
-                  <Link to="/wallet" className="underline font-medium">Fund your wallet →</Link>
+                <div className="bg-red-50 text-red-600 text-sm p-3 rounded-lg flex items-center justify-between gap-2 flex-wrap">
+                  <span>Insufficient balance.</span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setTopUpAmount(Math.max(100, Math.ceil((buyTarget.price - (walletBalance ?? 0)) / 100) * 100));
+                      setTopUpOpen(true);
+                    }}
+                    className="underline font-medium hover:text-red-700"
+                  >
+                    Fund wallet now →
+                  </button>
                 </div>
               )}
             </div>
@@ -344,6 +364,16 @@ export default function ProductsPage() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {user && (
+        <PaystackTopUpDialog
+          open={topUpOpen}
+          onOpenChange={setTopUpOpen}
+          user={user}
+          defaultAmount={topUpAmount}
+          onFunded={(newBalance) => { if (newBalance !== null) setWalletBalance(newBalance); }}
+        />
+      )}
     </>
   );
 }
