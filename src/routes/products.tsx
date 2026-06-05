@@ -190,9 +190,16 @@ export default function ProductsPage() {
                       {productsLoading ? "Loading…" : `${products.length} product${products.length !== 1 ? "s" : ""} available`}
                     </p>
                   </div>
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3 flex-wrap">
                     {user && walletBalance !== null && (
                       <span className="text-sm text-muted-foreground">Wallet: <span className="font-medium text-brand-navy">₦{walletBalance.toLocaleString()}</span></span>
+                    )}
+                    {user && (
+                      <Button size="sm" variant="outline"
+                        onClick={() => { setTopUpAmount(undefined); setTopUpOpen(true); }}
+                        className="h-8 border-brand-orange text-brand-orange hover:bg-brand-orange hover:text-white text-xs">
+                        <CreditCard className="w-3.5 h-3.5 mr-1" />Top Up
+                      </Button>
                     )}
                     <button onClick={() => setCat(undefined)} className="flex items-center gap-1 text-sm text-muted-foreground hover:text-brand-navy transition-colors">
                       <X className="w-4 h-4" />Close
