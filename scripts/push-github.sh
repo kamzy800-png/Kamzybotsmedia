@@ -8,12 +8,37 @@ if [ -z "${GITHUB_PAT:-}" ]; then
   exit 1
 fi
 
-# Strip all whitespace/newlines
+if [ -z "${GITHUB_REPO:-}" ]; then
+  echo "❌ GITHUB_REPO secret is not set. Format: username/repo-name  e.g. johndoe/sammy-store"
+  exit 1
+fi
+
 PAT_CLEAN=$(printf '%s' "$GITHUB_PAT" | tr -d '[:space:]')
 if [ -z "$PAT_CLEAN" ]; then
   echo "❌ GITHUB_PAT is blank after trimming. Please re-add it in Secrets."
   exit 1
 fi
 
-echo "🚀 Pushing to GitHub via API (bypasses git object negotiation)…"
-node scripts/push-github-api.mjs
+REMOTE_URL="https://${PAT_CLEAN}@github.com/${GITHUB_REPO}.git"
+
+git config --local user.email "replit-sync@sammystore.app" || true
+git config --local user.name  "Replit Auto-Sync" || true
+
+git remote set-url origin "$REMOTE_URL" 2>/dev/null \
+  || git remote add origin "$REMOTE_URL"
+
+git add -A
+
+if git diff --cached --quiet; then
+  echo "✅ Nothing new to commit — repo is up to date."
+  exit 0
+fi
+
+TIMESTAMP=$(date -u +"%Y-%m-%d %H:%M UTC")
+git commit -m "chore: auto-sync from Replit — ${TIMESTAMP}"
+
+# Push; fall back to plain --force if lease check fails (first push)
+git push origin HEAD:main --force-with-lease \
+  || git push origin HEAD:main --force
+
+echo "✅ Pushed successfully to github.com/${GITHUB_REPO}"
