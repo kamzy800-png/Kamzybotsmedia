@@ -147,16 +147,17 @@ function UsersTab() {
 
   const fetchUsers = async () => {
     setLoading(true);
-    const { data: profiles } = await supabase.from("profiles").select("*").order("created_at", { ascending: false });
-    if (!profiles) { setLoading(false); return; }
-    const ids = profiles.map((p: Profile) => p.id);
+    const { data: profilesRaw } = await supabase.from("profiles").select("*").order("created_at", { ascending: false });
+    if (!profilesRaw) { setLoading(false); return; }
+    const profiles = profilesRaw as unknown as Profile[];
+    const ids = profiles.map((p) => p.id);
     const [wallets, roles] = await Promise.all([
       supabase.from("wallets").select("user_id, balance, currency").in("user_id", ids),
       supabase.from("user_roles").select("user_id, role").in("user_id", ids),
     ]);
     const walletMap = Object.fromEntries((wallets.data ?? []).map((w: { user_id: string } & UserWallet) => [w.user_id, w]));
     const roleMap   = Object.fromEntries((roles.data ?? []).map((r: { user_id: string; role: string }) => [r.user_id, r.role]));
-    setUsers(profiles.map((p: Profile) => ({ ...p, wallet: walletMap[p.id] ?? null, role: roleMap[p.id] ?? "user" })));
+    setUsers(profiles.map((p) => ({ ...p, wallet: walletMap[p.id] ?? null, role: roleMap[p.id] ?? "user" })));
     setLoading(false);
   };
 
@@ -197,7 +198,8 @@ function UsersTab() {
   const toggleSuspend = async (u: UserRow) => {
     setSuspending(u.id);
     const newVal = !u.suspended;
-    const { error } = await supabase.from("profiles").update({ suspended: newVal, updated_at: new Date().toISOString() }).eq("id", u.id);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error } = await supabase.from("profiles").update({ suspended: newVal, updated_at: new Date().toISOString() } as any).eq("id", u.id);
     setSuspending(null);
     if (error) { toast.error(error.message); return; }
     toast.success(newVal ? `${u.display_name ?? u.email} suspended` : `${u.display_name ?? u.email} unsuspended`);
