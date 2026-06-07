@@ -27,7 +27,7 @@ async function ensureBucket(supabaseUrl, serviceKey, bucket) {
   }
 
   const err = await res.json().catch(() => ({}));
-  throw new Error((err.error || err.message || "Bucket creation failed") as string);
+  throw new Error((err.error || err.message || "Bucket creation failed"));
 }
 
 export async function onRequestPost({ request, env }) {
