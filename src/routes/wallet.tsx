@@ -559,6 +559,36 @@ function TransactionList({ transactions }: { transactions: Tx[] }) {
             </div>
           </CardContent>
         </Card>
+
+      <Card className="border-2 border-green-200 bg-green-50/50">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            🏦 Pay via Bank Transfer
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <p className="text-sm text-muted-foreground">Send payment directly to our bank account, then send your proof to WhatsApp to get credited.</p>
+          <div className="bg-white rounded-xl border border-green-200 p-4 space-y-3">
+            <div className="flex justify-between items-center">
+              <span className="text-xs text-muted-foreground font-medium">Bank</span>
+              <span className="text-sm font-semibold text-brand-navy">MONIEPOINT</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-xs text-muted-foreground font-medium">Account Number</span>
+              <span className="text-sm font-bold text-brand-orange tracking-widest">6663788595</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-xs text-muted-foreground font-medium">Account Name</span>
+              <span className="text-sm font-semibold text-brand-navy text-right">ABDULLAHI KAMALUDEEN / KAMZYBOT'S MEDIA</span>
+            </div>
+          </div>
+          <a href="https://wa.me/2348159696814" target="_blank" rel="noopener noreferrer"
+            className="flex items-center justify-center gap-2 w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-3 rounded-xl transition-colors text-sm">
+            💬 Send Payment Proof on WhatsApp
+          </a>
+          <p className="text-xs text-center text-muted-foreground">Your wallet will be credited within minutes after verification.</p>
+        </CardContent>
+      </Card>
       ))}
     </div>
   );
