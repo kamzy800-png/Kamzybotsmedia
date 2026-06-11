@@ -152,7 +152,7 @@ export default function PrivacyPage() {
             <Section title="13. Contact Us">
               <p>If you have any questions, concerns, or requests regarding this Privacy Policy or our data practices, please contact us:</p>
               <ul>
-                <li><strong>Email:</strong> contact@kamzybotsmedia.com</li>
+                <li><strong>Email:</strong> kamzybotsmedia@gmail.com</li>
                 <li><strong>Platform:</strong> <Link to="/contact" className="text-brand-orange hover:underline">Contact Form</Link></li>
               </ul>
             </Section>

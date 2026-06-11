@@ -79,9 +79,9 @@ export const blogs: Blog[] = [
 ];
 
 export const contactInfo = {
-  email: "contact@kamzybotsmedia.com",
-  phone: "+234 815 969 6814",
-  phoneRaw: "+2348159696814",
+  email: "kamzybotsmedia@gmail.com",
+  phone: "+234 903 539 6464",
+  phoneRaw: "+2349035396464",
   whatsappSupport: "https://wa.me/2348159696814",
   whatsappGroup: "https://chat.whatsapp.com/EvXxgtIsxPiDsEGFQcMP9v",
   telegramSupport: "https://t.me/Kamzybotsmedia",
@@ -89,4 +89,4 @@ export const contactInfo = {
   location: "Nigeria",
 };
 
-export const ADMIN_OWNER_EMAIL = "contact@kamzybotsmedia.com";
+export const ADMIN_OWNER_EMAIL = "kamzybotsmedia@gmail.com";
