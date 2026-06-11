@@ -1,3 +1,3 @@
-- [Sammy Store Stack](sammy-store-stack.md) — Vite+React+Express dev / Cloudflare Pages Functions prod; Supabase active project bevmllrasbnmujbgbnuo
+- [KAMZYBOT'S MEDIA Stack](kamzybots-media-stack.md) — Vite+React+Express dev / Cloudflare Pages Functions prod; Supabase active project bevmllrasbnmujbgbnuo
 - [Wallet System](wallet-system.md) — CF Pages Functions own /api/*; 4-step retry/fallback; background provision on login; NOWPayments IPN secret needed
 - [GitHub Sync](github-sync.md) — PAT stored as GITHUB_PAT secret; scripts/push-to-github.sh + pull-from-github.sh; two workflows wired

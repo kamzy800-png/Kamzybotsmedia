@@ -7,13 +7,13 @@ if [ -z "$GITHUB_PAT" ]; then
   exit 1
 fi
 
-REPO="https://$GITHUB_PAT@github.com/evilos619-cell/sammystore.git"
+REPO="https://$GITHUB_PAT@github.com/evilos619-cell/kamzybots-media.git"
 
 # Clear stale locks
 find .git -name "*.lock" -delete 2>/dev/null || true
 
-git config user.email "sammystore@replit.dev"
-git config user.name "Sammy Store Bot"
+git config user.email "kamzybotsmedia@replit.dev"
+git config user.name "KAMZYBOT'S MEDIA Bot"
 git config pull.rebase false
 
 git remote set-url origin "$REPO"

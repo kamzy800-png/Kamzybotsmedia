@@ -1,5 +1,5 @@
 -- =============================================================================
--- SAMMY STORE LOGS — Complete Database Bootstrap
+-- KAMZYBOT'S MEDIA LOGS — Complete Database Bootstrap
 -- Run this entire script once in the Supabase SQL Editor for your project.
 -- It is idempotent: safe to run multiple times.
 -- =============================================================================

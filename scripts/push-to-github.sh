@@ -7,14 +7,14 @@ if [ -z "$GITHUB_PAT" ]; then
   exit 1
 fi
 
-REPO="https://$GITHUB_PAT@github.com/evilos619-cell/sammystore.git"
+REPO="https://$GITHUB_PAT@github.com/evilos619-cell/kamzybots-media.git"
 
 # Clear any stale git lock files (safe — only removes .lock files)
 find .git -name "*.lock" -delete 2>/dev/null || true
 
 # Configure identity for this session
-git config user.email "sammystore@replit.dev"
-git config user.name "Sammy Store Bot"
+git config user.email "kamzybotsmedia@replit.dev"
+git config user.name "KAMZYBOT'S MEDIA Bot"
 git config pull.rebase false
 
 # Set authenticated remote (PAT embedded in URL)
@@ -39,4 +39,4 @@ git pull origin main --allow-unrelated-histories --no-edit 2>/dev/null || true
 
 # Push to main
 git push origin HEAD:main
-echo "🚀 Successfully pushed to github.com/evilos619-cell/sammystore (main)"
+echo "🚀 Successfully pushed to github.com/evilos619-cell/kamzybots-media (main)"

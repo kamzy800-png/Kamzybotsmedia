@@ -1,9 +1,9 @@
 ---
 name: GitHub Sync
-description: How auto-push/pull to GitHub is set up for Sammy Store on Replit
+description: How auto-push/pull to GitHub is set up for KAMZYBOT'S MEDIA on Replit
 ---
 
-**Repo:** https://github.com/evilos619-cell/sammystore (branch: main)
+**Repo:** https://github.com/evilos619-cell/kamzybots-media (branch: main)
 
 **Auth:** PAT stored as Replit secret `GITHUB_PAT` — embedded in remote URL at push time, never written to any file.
 

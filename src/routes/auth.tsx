@@ -47,9 +47,10 @@ export default function AuthPage() {
         <div className="text-center mb-6">
           <Link to="/" className="inline-block">
             <span className="text-2xl font-bold tracking-tight text-brand-navy">
-              SAMMY <span className="text-brand-orange">STORE</span>
+              KAMZYBOT'S <span className="text-brand-orange">MEDIA</span>
             </span>
           </Link>
+          <p className="text-sm text-muted-foreground mt-2">Digital Solutions • Creative Services • Social Media Growth</p>
           <p className="text-sm text-muted-foreground mt-2">Welcome — sign in to manage your wallet &amp; orders.</p>
         </div>
 

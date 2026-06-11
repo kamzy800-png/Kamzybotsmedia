@@ -14,8 +14,8 @@ export function SiteFooter() {
   const year = new Date().getFullYear();
 
   const socials = [
-    { icon: Facebook, href: "https://www.facebook.com/profile.php?id=61590741410137", label: "Facebook" },
-    { icon: TikTokIcon, href: "https://www.tiktok.com/@o.n.l.y.s.a.m.m.y?_r=1&_t=ZS-96sJydYpfHh", label: "TikTok" },
+    { icon: Facebook, href: "https://www.facebook.com/profile.php?id=61588996504008&mibextid=wwXIfr&mibextid=wwXIfr", label: "Facebook" },
+    { icon: TikTokIcon, href: "https://www.tiktok.com/@kamzybotsmedia?_r=1&_t=ZS-976ZBzvX3n2", label: "TikTok" },
   ];
 
   const community = [
@@ -34,7 +34,7 @@ export function SiteFooter() {
               <span className="text-xl font-bold">KAMZYBOT'S <span className="text-brand-orange">MEDIA</span></span>
             </Link>
             <p className="text-white/70 text-sm leading-relaxed">
-              Digital solutions and creative services for social media growth. Professional strategies tailored to your success.
+              Digital Solutions • Creative Services • Social Media Growth
             </p>
             <div className="flex items-center gap-3">
               {socials.map(({ icon: Icon, href, label }) => (
@@ -94,7 +94,7 @@ export function SiteFooter() {
       <div className="border-t border-white/10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
           <div className="flex flex-col md:flex-row items-center justify-between gap-3">
-            <p className="text-white/60 text-sm">&copy; {year} Kamzybot's Media. All rights reserved.</p>
+            <p className="text-white/60 text-sm">&copy; {year} KAMZYBOT'S MEDIA. All rights reserved.</p>
             <div className="flex items-center gap-5 text-sm text-white/60">
               <Link to="/privacy-policy" className="hover:text-white transition-colors">Privacy Policy</Link>
               <Link to="/terms" className="hover:text-white transition-colors">Terms of Service</Link>

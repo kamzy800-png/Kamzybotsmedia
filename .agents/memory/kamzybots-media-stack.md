@@ -1,9 +1,9 @@
 ---
-name: Sammy Store Stack
-description: Core patterns for the Sammy Store Logs TanStack Start + Supabase app
+name: KAMZYBOT'S MEDIA Stack
+description: Core patterns for the KAMZYBOT'S MEDIA Logs TanStack Start + Supabase app
 ---
 
-# Sammy Store Stack
+# KAMZYBOT'S MEDIA Stack
 
 **Why:** Multi-session app with SSR, Supabase RLS, wallet system, Paystack + NOWPayments.
 

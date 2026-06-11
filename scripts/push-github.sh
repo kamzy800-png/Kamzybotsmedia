@@ -9,7 +9,7 @@ if [ -z "${GITHUB_PAT:-}" ]; then
 fi
 
 if [ -z "${GITHUB_REPO:-}" ]; then
-  echo "❌ GITHUB_REPO secret is not set. Format: username/repo-name  e.g. johndoe/sammy-store"
+  echo "❌ GITHUB_REPO secret is not set. Format: username/repo-name  e.g. johndoe/kamzybots-media"
   exit 1
 fi
 
@@ -24,7 +24,7 @@ fi
 REPO_CLEAN=$(printf '%s' "$GITHUB_REPO" | sed 's|https://github\.com/||g' | sed 's|http://github\.com/||g' | tr -d '[:space:]')
 REMOTE_URL="https://${PAT_CLEAN}@github.com/${REPO_CLEAN}.git"
 
-git config --local user.email "replit-sync@sammystore.app" || true
+git config --local user.email "replit-sync@kamzybots.media" || true
 git config --local user.name  "Replit Auto-Sync" || true
 
 git remote set-url origin "$REMOTE_URL" 2>/dev/null \

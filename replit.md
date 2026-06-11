@@ -1,4 +1,4 @@
-# Sammy Store Logs
+# KAMZYBOT'S MEDIA Logs
 
 A digital goods storefront built with React 19 + Vite (frontend) and Express.js (backend API), using Supabase for authentication and database.
 

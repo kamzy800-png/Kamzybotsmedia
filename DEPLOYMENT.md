@@ -1,4 +1,4 @@
-# Sammy Store — Deployment & Setup
+# KAMZYBOT'S MEDIA — Deployment & Setup
 
 This app is a **TanStack Start** project (React 19 + Vite 7) backed by **Lovable Cloud (Supabase)**. The recommended hosting is **Lovable's built-in publish flow** (one-click, no config). The project is also configured to deploy on Vercel/Cloudflare with a small amount of setup.
 
@@ -45,7 +45,7 @@ RLS is enabled on every table. The first signup using `kamzybotsmedia@gmail.com`
 
 ### 3a. Lovable (recommended)
 
-Just click **Publish** in the Lovable editor. Live at `https://sammystore.lovable.app` (custom domains available in Project Settings).
+Just click **Publish** in the Lovable editor. Live at `https://kamzybots-media.lovable.app` (custom domains available in Project Settings).
 
 ### 3b. Vercel
 

@@ -1,6 +1,6 @@
 ---
 name: Wallet System
-description: How wallet creation, funding, and webhooks work in Sammy Store Logs
+description: How wallet creation, funding, and webhooks work in KAMZYBOT'S MEDIA Logs
 ---
 
 ## Wallet creation strategy (4-step, 3 attempts, 2s delay)
@@ -21,7 +21,7 @@ Fire-and-forget — never blocks auth flow.
 - PAYSTACK_SECRET_KEY
 - NOWPAYMENTS_API_KEY
 - NOWPAYMENTS_IPN_SECRET  ← needed for webhook signature verification
-- SITE_URL = https://sammystorelogs.com  (NOT mmystorelogs.com)
+-- SITE_URL = https://kamzybotsmedialogs.com  (NOT mmystorelogs.com)
 
 ## Webhooks
 - Paystack: POST /api/webhooks/paystack — HMAC-SHA512 of raw body using PAYSTACK_SECRET_KEY

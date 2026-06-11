@@ -44,7 +44,7 @@ export function SiteHeader() {
             <Link to="/" className="flex items-center gap-2 shrink-0">
               <img
                 src="/images/logo.svg"
-                alt="Kamzybot's Media"
+                alt="KAMZYBOT'S MEDIA"
                 className="h-10 w-auto object-contain"
               />
             </Link>

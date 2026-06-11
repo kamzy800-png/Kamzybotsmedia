@@ -92,10 +92,10 @@ callers — always verify signatures inside the handler).
 ```bash
 npm install -g wrangler
 npm run build
-wrangler pages deploy dist --project-name=sammy-store
+wrangler pages deploy dist --project-name=kamzybots-media
 ```
 
-Set the same env vars with `wrangler pages secret put NAME --project-name=sammy-store`.
+Set the same env vars with `wrangler pages secret put NAME --project-name=kamzybots-media`.
 
 ---
 
