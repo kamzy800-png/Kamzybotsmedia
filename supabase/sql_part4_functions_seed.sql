@@ -78,6 +78,13 @@ BEGIN
   SELECT * INTO v_product FROM public.products WHERE id = _product_id AND published = true FOR UPDATE;
   IF v_product.id IS NULL THEN RAISE EXCEPTION 'product not available'; END IF;
   IF v_product.stock < _quantity THEN RAISE EXCEPTION 'insufficient stock'; END IF;
+  -- Ensure we have enough unused credentials before creating the order
+  DECLARE v_avail_count int := 0; BEGIN
+    SELECT COUNT(*) INTO v_avail_count FROM public.product_credentials WHERE product_id = _product_id AND order_id IS NULL;
+    IF v_avail_count < _quantity THEN
+      RAISE EXCEPTION 'Product is currently out of stock.';
+    END IF;
+  END;
   v_total := v_product.price * _quantity;
   SELECT id, balance INTO v_wallet_id, v_new_balance FROM public.wallets WHERE user_id = _user_id FOR UPDATE;
   IF v_wallet_id IS NULL THEN RAISE EXCEPTION 'wallet not found'; END IF;
@@ -113,7 +120,7 @@ BEGIN
     ORDER BY created_at ASC LIMIT 1 FOR UPDATE SKIP LOCKED;
   IF v_cred_id IS NULL THEN RETURN NULL; END IF;
   UPDATE public.product_credentials SET order_id=_order_id, assigned_to=v_user_id, delivered_at=now() WHERE id=v_cred_id;
-  UPDATE public.order_items SET delivered_payload=v_cred_id::text WHERE order_id=_order_id AND product_id=_product_id;
+  UPDATE public.order_items SET delivered_payload=(SELECT content FROM public.product_credentials WHERE id = v_cred_id) WHERE order_id=_order_id AND product_id=_product_id;
   UPDATE public.orders SET status = 'completed' WHERE id = _order_id AND status = 'pending_credentials';
   RETURN v_cred_id;
 END;

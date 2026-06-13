@@ -66,9 +66,9 @@ BEGIN
   SET order_id = _order_id, assigned_to = v_user_id, delivered_at = now()
   WHERE id = v_cred_id;
 
-  -- record on the order item for visibility
+  -- record credential content on the order item for visibility
   UPDATE public.order_items
-  SET delivered_payload = v_cred_id::text
+  SET delivered_payload = (SELECT content FROM public.product_credentials WHERE id = v_cred_id)
   WHERE order_id = _order_id AND product_id = _product_id;
 
   RETURN v_cred_id;
