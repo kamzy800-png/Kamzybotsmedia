@@ -7,6 +7,7 @@ import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import MarketplaceChat from "@/components/marketplace/MarketplaceChat";
 
 type Product = { 
   id: string; 
@@ -72,6 +73,13 @@ export default function ProductDetailPage() {
     setPurchasing(true);
 
     try {
+      // Check user profile suspension status
+      const { data: profile } = await supabase.from("profiles").select("suspended").eq("id", user.id).single();
+      if (profile?.suspended) {
+        toast.error("Your account has been suspended. Contact support.");
+        setPurchasing(false);
+        return;
+      }
       // Process purchase for each unit
       for (let i = 0; i < quantity; i++) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -83,7 +91,14 @@ export default function ProductDetailPage() {
 
         if (error) {
           console.error("[Buy] purchase_with_wallet error:", error);
-          toast.error(error.message || "Purchase failed. Please try again.");
+          const msg = (error.message || '').toLowerCase();
+          if (msg.includes('insufficient wallet balance')) {
+            toast.error('Insufficient wallet balance. Please fund your wallet.');
+          } else if (msg.includes('product is currently out of stock')) {
+            toast.error('Product is currently out of stock.');
+          } else {
+            toast.error(error.message || "Purchase failed. Please try again.");
+          }
           setPurchasing(false);
           return;
         }
@@ -263,6 +278,8 @@ export default function ProductDetailPage() {
             </div>
 
             {/* Additional Info */}
+            <MarketplaceChat productId={product.id} sellerId={(product as any).user_id || (product as any).seller_id || null} />
+
             <div className="border-t pt-6 space-y-3 text-sm text-muted-foreground">
               <div className="flex justify-between">
                 <span>Delivery</span>

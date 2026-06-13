@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { toast } from "sonner";
 import type { Session, User } from "@supabase/supabase-js";
 import { isSupabaseConfigured, supabase } from "@/integrations/supabase/client";
 
@@ -89,10 +90,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if ((event === "SIGNED_IN" || event === "INITIAL_SESSION") && s) {
           provisionWalletBackground(s);
         }
-        setTimeout(() => {
+        // Also check suspension and refresh role
+        (async () => {
+          try {
+            const { data: profile } = await supabase.from("profiles").select("suspended").eq("id", s.user.id).single();
+            if (profile?.suspended) {
+              try { await supabase.auth.signOut(); } catch { /* ignore */ }
+              toast.error("Your account has been suspended. Contact support.");
+              return;
+            }
+          } catch {
+            // ignore
+          }
           if (!mounted) return;
           fetchRole(s.user.id).then((r) => { if (mounted) setRole(r); });
-        }, 0);
+        })();
       } else {
         setRole(null);
       }
@@ -103,11 +115,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSession(data.session);
       setUser(data.session?.user ?? null);
       if (data.session?.user) {
-        fetchRole(data.session.user.id).then((r) => {
-          if (!mounted) return;
-          setRole(r);
-          setLoading(false);
-        });
+        // Check suspension status on initial session
+        (async () => {
+          try {
+            const { data: profile } = await supabase.from("profiles").select("suspended").eq("id", data.session!.user.id).single();
+            if (profile?.suspended) {
+              try { await supabase.auth.signOut(); } catch { /* ignore */ }
+              toast.error("Your account has been suspended. Contact support.");
+              setLoading(false);
+              return;
+            }
+          } catch {
+            // ignore
+          }
+          fetchRole(data.session!.user.id).then((r) => {
+            if (!mounted) return;
+            setRole(r);
+            setLoading(false);
+          });
+        })();
       } else {
         setLoading(false);
       }

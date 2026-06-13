@@ -457,6 +457,214 @@ app.post("/api/admin/manual-deposits/verify", async (req, res) => {
   }
 });
 
+// ─── Admin: User management APIs ─────────────────────────────────────────────
+app.get("/api/admin/users", async (req, res) => {
+  // Admin token or admin role allowed
+  const adminHeader = req.header("X-Admin-Token");
+  let isAdmin = false;
+  let adminId: string | null = null;
+  if (adminHeader && ADMIN_API_TOKEN && adminHeader === ADMIN_API_TOKEN) {
+    isAdmin = true; adminId = 'api-token';
+  } else {
+    if (!requireSupabase(res)) return;
+    const user = await getAuthUser(req);
+    if (!user) return err(res, 401, "Unauthorized");
+    const { data: roles } = await supabaseAdmin!.from("user_roles").select("role").eq("user_id", user.id).eq("role", "admin").limit(1);
+    if (!roles || roles.length === 0) return err(res, 403, "Forbidden");
+    isAdmin = true; adminId = user.id;
+  }
+
+  const q = (req.query.q as string) ?? "";
+  const suspended = req.query.suspended;
+  try {
+    let query = supabaseAdmin!.from("profiles").select("id,email,display_name,suspended,created_at").order("created_at", { ascending: false }).limit(200);
+    if (q) query = query.ilike("email", `%${q}%`);
+    if (suspended === "true") query = query.eq("suspended", true);
+    if (suspended === "false") query = query.eq("suspended", false);
+    const { data, error } = await query;
+    if (error) return err(res, 500, error.message);
+    // Enrich with wallet balance
+    const users = (data ?? []) as any[];
+    const userIds = users.map((u) => u.id);
+    const { data: wallets } = await supabaseAdmin!.from("wallets").select("user_id,balance").in("user_id", userIds);
+    const walletMap = Object.fromEntries((wallets ?? []).map((w: any) => [w.user_id, w.balance]));
+    const result = users.map((u) => ({ ...u, wallet_balance: walletMap[u.id] ?? 0 }));
+    return res.json({ users: result });
+  } catch (e) {
+    console.error("/api/admin/users error:", e);
+    return err(res, 500, "Internal server error");
+  }
+});
+
+app.post("/api/admin/users/:id/suspend", async (req, res) => {
+  if (!requireSupabase(res)) return;
+  const user = await getAuthUser(req); if (!user) return err(res, 401, "Unauthorized");
+  const { data: roles } = await supabaseAdmin!.from("user_roles").select("role").eq("user_id", user.id).eq("role", "admin").limit(1);
+  if (!roles || roles.length === 0) return err(res, 403, "Forbidden");
+  const target = req.params.id;
+  const { suspended } = req.body as { suspended?: boolean };
+  if (suspended === undefined) return err(res, 400, "suspended is required");
+  const { error } = await supabaseAdmin!.from("profiles").update({ suspended, updated_at: new Date().toISOString() }).eq("id", target);
+  if (error) return err(res, 500, error.message);
+  await supabaseAdmin!.from("activity_logs").insert({ actor_id: user.id, action: suspended ? 'suspend_user' : 'unsuspend_user', target, metadata: { suspended } });
+  return res.json({ success: true });
+});
+
+app.post("/api/admin/users/:id/debit", async (req, res) => {
+  if (!requireSupabase(res)) return;
+  const admin = await getAuthUser(req); if (!admin) return err(res, 401, "Unauthorized");
+  const { data: roles } = await supabaseAdmin!.from("user_roles").select("role").eq("user_id", admin.id).eq("role", "admin").limit(1);
+  if (!roles || roles.length === 0) return err(res, 403, "Forbidden");
+  const target = req.params.id;
+  const { amount, description } = req.body as { amount?: number; description?: string };
+  if (!amount || amount <= 0 || !description) return err(res, 400, "amount and description are required");
+  if (!pool) return err(res, 500, "Database not configured");
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    const walletRes = await client.query(`SELECT id, balance FROM wallets WHERE user_id = $1 FOR UPDATE`, [target]);
+    if (walletRes.rowCount === 0) { await client.query("ROLLBACK"); return err(res, 404, "wallet not found"); }
+    const wallet = walletRes.rows[0];
+    const current = Number(wallet.balance ?? 0);
+    if (current < amount) { await client.query("ROLLBACK"); return err(res, 400, "insufficient balance"); }
+    const newBal = current - amount;
+    await client.query(`UPDATE wallets SET balance = $1, updated_at = now() WHERE id = $2`, [newBal, wallet.id]);
+    const txRes = await client.query(`INSERT INTO wallet_transactions (wallet_id,user_id,type,amount,balance_after,status,provider,reference,description,created_at) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,now()) RETURNING id`, [wallet.id, target, 'debit', amount, newBal, 'success', 'manual', 'admin-debit-' || gen_random_uuid()::text, description]);
+    await client.query(`INSERT INTO activity_logs (actor_id, action, target, metadata, created_at) VALUES ($1,$2,$3,$4, now())`, [admin.id, 'admin_debit', target, JSON.stringify({ amount, description })]);
+    await client.query("COMMIT");
+    return res.json({ success: true, newBalance: newBal });
+  } catch (e) {
+    await client.query("ROLLBACK"); console.error("admin debit error:", e); return err(res, 500, "Internal server error");
+  } finally { client.release(); }
+});
+
+// Admin credit already exists as /api/payment/admin-credit
+
+// ─── Notifications APIs ─────────────────────────────────────────────────────
+app.post('/api/admin/notifications/send', async (req, res) => {
+  // Admin only
+  const adminHeader = req.header("X-Admin-Token");
+  let isAdmin = false; let adminId: string | null = null;
+  if (adminHeader && ADMIN_API_TOKEN && adminHeader === ADMIN_API_TOKEN) { isAdmin = true; adminId = 'api-token'; }
+  else { if (!requireSupabase(res)) return; const user = await getAuthUser(req); if (!user) return err(res,401,'Unauthorized'); const { data: roles } = await supabaseAdmin!.from('user_roles').select('role').eq('user_id', user.id).eq('role','admin').limit(1); if (!roles || roles.length===0) return err(res,403,'Forbidden'); isAdmin=true; adminId = user.id; }
+
+  const { title, message, userIds } = req.body as { title?: string; message?: string; userIds?: string[] };
+  if (!title || !message) return err(res,400,'title and message required');
+  try {
+    if (!userIds || userIds.length === 0) {
+      // Broadcast
+      const { error } = await supabaseAdmin!.from('notifications').insert({ title, message, target_user_id: null, created_by: adminId });
+      if (error) return err(res,500,error.message);
+      await supabaseAdmin!.from('activity_logs').insert({ actor_id: adminId, action: 'send_notification_broadcast', metadata: { title } });
+      return res.json({ success: true });
+    }
+    // Send to selected users
+    const rows = userIds.map((uid) => ({ title, message, target_user_id: uid, created_by: adminId }));
+    const { error } = await supabaseAdmin!.from('notifications').insert(rows);
+    if (error) return err(res,500,error.message);
+    await supabaseAdmin!.from('activity_logs').insert({ actor_id: adminId, action: 'send_notification_selected', metadata: { title, user_count: userIds.length } });
+    return res.json({ success: true });
+  } catch (e) { console.error('send notif error', e); return err(res,500,'Internal server error'); }
+});
+
+app.get('/api/notifications', async (req, res) => {
+  if (!requireSupabase(res)) return; const user = await getAuthUser(req); if (!user) return err(res,401,'Unauthorized');
+  try {
+    const { data } = await supabaseAdmin!.from('notifications').select('id,title,message,target_user_id,created_at,created_by').or(`target_user_id.is.null,target_user_id.eq.${user.id}`).order('created_at', { ascending: false }).limit(200);
+    // Include read status
+    const ids = (data ?? []).map((n: any) => n.id);
+    const { data: reads } = await supabaseAdmin!.from('notification_reads').select('notification_id,user_id,read_at').in('notification_id', ids).eq('user_id', user.id);
+    const readSet = new Set((reads ?? []).map((r: any) => r.notification_id));
+    const out = (data ?? []).map((n: any) => ({ ...n, read: readSet.has(n.id) }));
+    return res.json({ notifications: out });
+  } catch (e) { console.error('/api/notifications error', e); return err(res,500,'Internal server error'); }
+});
+
+app.post('/api/notifications/:id/read', async (req, res) => {
+  if (!requireSupabase(res)) return; const user = await getAuthUser(req); if (!user) return err(res,401,'Unauthorized');
+  const id = req.params.id;
+  try {
+    const { error } = await supabaseAdmin!.from('notification_reads').insert({ notification_id: id, user_id: user.id });
+    if (error) return err(res,500,error.message);
+    return res.json({ success: true });
+  } catch (e) { console.error('mark read', e); return err(res,500,'Internal server error'); }
+});
+
+// ─── Marketplace chat APIs ──────────────────────────────────────────────────
+app.post('/api/marketplace/conversations', async (req, res) => {
+  // Create or return an existing conversation for this product between buyer and seller
+  const adminHeader = req.header('X-Admin-Token');
+  if (!requireSupabase(res) && !(adminHeader && ADMIN_API_TOKEN && adminHeader === ADMIN_API_TOKEN)) return;
+
+  const user = await getAuthUser(req);
+  const { productId, sellerId } = req.body as { productId?: string; sellerId?: string };
+  if (!productId) return err(res, 400, 'productId is required');
+
+  // If called with admin token, allow specifying buyerId in body
+  const buyerIdFromBody = (req.body as any).buyerId as string | undefined;
+  const buyerId = user?.id ?? buyerIdFromBody ?? null;
+  if (!buyerId) return err(res, 401, 'Unauthorized');
+
+  try {
+    const { data: existing } = await supabaseAdmin!.from('marketplace_conversations').select('*').eq('product_id', productId).eq('buyer_id', buyerId).limit(1);
+    if (existing && existing.length > 0) return res.json({ conversation: existing[0] });
+
+    const { data, error } = await supabaseAdmin!.from('marketplace_conversations').insert({ product_id: productId, buyer_id: buyerId, seller_id: sellerId }).select('*').single();
+    if (error) return err(res, 500, error.message);
+    return res.json({ conversation: data });
+  } catch (e) {
+    console.error('create conversation error', e);
+    return err(res, 500, 'Internal server error');
+  }
+});
+
+app.get('/api/marketplace/conversations/:id/messages', async (req, res) => {
+  if (!requireSupabase(res)) return;
+  const user = await getAuthUser(req); if (!user) return err(res, 401, 'Unauthorized');
+  const convId = req.params.id;
+  try {
+    const { data: conv } = await supabaseAdmin!.from('marketplace_conversations').select('*').eq('id', convId).single();
+    if (!conv) return err(res, 404, 'conversation not found');
+    if (conv.buyer_id !== user.id && conv.seller_id !== user.id) return err(res, 403, 'Forbidden');
+
+    const { data: msgs, error } = await supabaseAdmin!.from('marketplace_messages').select('*').eq('conversation_id', convId).order('created_at', { ascending: true }).limit(1000);
+    if (error) return err(res, 500, error.message);
+    return res.json({ messages: msgs ?? [] });
+  } catch (e) {
+    console.error('fetch messages error', e);
+    return err(res, 500, 'Internal server error');
+  }
+});
+
+app.post('/api/marketplace/conversations/:id/messages', async (req, res) => {
+  if (!requireSupabase(res)) return;
+  const user = await getAuthUser(req); if (!user) return err(res, 401, 'Unauthorized');
+  const convId = req.params.id;
+  const { message, metadata } = req.body as { message?: string; metadata?: Record<string, unknown> };
+  if (!message) return err(res, 400, 'message is required');
+
+  try {
+    const { data: conv } = await supabaseAdmin!.from('marketplace_conversations').select('*').eq('id', convId).single();
+    if (!conv) return err(res, 404, 'conversation not found');
+    if (conv.buyer_id !== user.id && conv.seller_id !== user.id) return err(res, 403, 'Forbidden');
+
+    const { data, error } = await supabaseAdmin!.from('marketplace_messages').insert({ conversation_id: convId, sender_id: user.id, message, metadata }).select('*').single();
+    if (error) return err(res, 500, error.message);
+
+    // Optionally create a notification for the other party
+    const target = conv.buyer_id === user.id ? conv.seller_id : conv.buyer_id;
+    if (target) {
+      await supabaseAdmin!.from('notifications').insert({ title: 'New message', message: (message.length > 140 ? message.slice(0, 137) + '...' : message), target_user_id: target, created_by: user.id });
+    }
+
+    return res.json({ message: data });
+  } catch (e) {
+    console.error('post message error', e);
+    return err(res, 500, 'Internal server error');
+  }
+});
+
+
 // ─── Static file serving ──────────────────────────────────────────────────
 app.use("/uploads", express.static(uploadsDir));
 

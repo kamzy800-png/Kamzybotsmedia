@@ -21,28 +21,19 @@ DECLARE
   v_cred_id       uuid;
   v_content       text;
   v_label         text;
-  v_existing      text;
 BEGIN
   -- Ownership check
   SELECT user_id INTO v_order_user_id FROM public.orders WHERE id = _order_id;
   IF v_order_user_id IS NULL THEN RAISE EXCEPTION 'order not found'; END IF;
   IF v_order_user_id IS DISTINCT FROM auth.uid() THEN RAISE EXCEPTION 'forbidden'; END IF;
 
-  -- Already delivered? Return existing credential.
-  SELECT delivered_payload INTO v_existing
-    FROM public.order_items
+  -- Already delivered? look up any credential linked to this order+product
+  SELECT id, content, label INTO v_cred_id, v_content, v_label
+    FROM public.product_credentials
     WHERE order_id = _order_id AND product_id = _product_id
-      AND delivered_payload IS NOT NULL
     LIMIT 1;
 
-  IF v_existing IS NOT NULL THEN
-    BEGIN
-      SELECT content, label INTO v_content, v_label
-        FROM public.product_credentials
-        WHERE id = v_existing::uuid;
-    EXCEPTION WHEN others THEN
-      v_content := NULL; v_label := NULL;
-    END;
+  IF v_cred_id IS NOT NULL THEN
     RETURN jsonb_build_object('assigned', true, 'content', v_content, 'label', v_label);
   END IF;
 
@@ -64,12 +55,12 @@ BEGIN
         delivered_at = now()
     WHERE id = v_cred_id;
 
-  UPDATE public.order_items
-    SET delivered_payload = v_cred_id::text
-    WHERE order_id = _order_id AND product_id = _product_id;
-
   SELECT content, label INTO v_content, v_label
     FROM public.product_credentials WHERE id = v_cred_id;
+
+  UPDATE public.order_items
+    SET delivered_payload = v_content
+    WHERE order_id = _order_id AND product_id = _product_id;
 
   RETURN jsonb_build_object('assigned', true, 'content', v_content, 'label', v_label);
 END;

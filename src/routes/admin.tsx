@@ -1185,11 +1185,19 @@ function CredentialsDialog({ product, onClose }: { product: Product; onClose: ()
     if (!lines.length) return toast.error("Enter at least one credential");
     setAdding(true);
 
-    const rows = lines.map((content, i) => ({
-      product_id: product.id,
-      content,
-      label: bulkLabel.trim() ? `${bulkLabel.trim()} #${i + 1}` : null,
-    }));
+    const rows = lines.map((content, i) => {
+      const parts = content.split("|").map((p) => p.trim());
+      return {
+        product_id: product.id,
+        content,
+        username: parts[0] ?? null,
+        password: parts[1] ?? null,
+        email: parts[2] ?? null,
+        email_password: parts[3] ?? null,
+        two_factor: parts[4] ?? null,
+        label: bulkLabel.trim() ? `${bulkLabel.trim()} #${i + 1}` : null,
+      };
+    });
 
     const { error } = await supabase.from("product_credentials").insert(rows);
     setAdding(false);
